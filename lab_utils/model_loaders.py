@@ -1,3 +1,31 @@
+from transformers import Dinov2Model, AutoImageProcessor
+
+def load_dino_model(model_name: str = "facebook/dinov2-base", device: str = None):
+    """
+    Load DINOv2 model from HuggingFace.
+
+    Args:
+        model_name: DINOv2 model identifier from HuggingFace
+        device: Device to use (cuda/cpu)
+
+    Returns:
+        Tuple of (model, processor, device)
+    """
+    print(f"Loading DINOv2 model: {model_name}...")
+
+    processor = AutoImageProcessor.from_pretrained(model_name)
+    model = Dinov2Model.from_pretrained(model_name)
+
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    else:
+        device = torch.device(device)
+
+    model = model.to(device)
+    model.eval()
+
+    print(f"DINOv2 model loaded on device: {device}")
+    return model, processor, str(device)
 """
 Model loading utilities for 3D Semantic Object Mapping Lab.
 

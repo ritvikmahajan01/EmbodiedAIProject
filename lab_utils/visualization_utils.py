@@ -73,7 +73,7 @@ def visualize_sam_proposals_grid(image: Image.Image,
         y_points: Y coordinates of grid points
         save_path: Optional path to save the visualization
     """
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(18, 6))
     
     img_array = np.array(image)
     

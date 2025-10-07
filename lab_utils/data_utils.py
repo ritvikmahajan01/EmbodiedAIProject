@@ -12,25 +12,59 @@ from scipy.spatial.transform import Rotation
 import open3d as o3d
 
 
-def get_frame_list(rgb_path: str, frame_skip: int = 1) -> List[Dict[str, str]]:
-    """Get sorted list of RGB frames with metadata."""
-    # Get all PNG files and sort by timestamp
-    all_frames = [f for f in os.listdir(rgb_path) if f.endswith('.png')]
-    all_frames.sort(key=lambda x: float(x.split('_')[1].replace('.png', '')))
+def get_frame_list(config, frame_skip=1, max_frames=25, start_frame_name=None):
+    files = sorted(os.listdir(config.RGB_PATH))
+    frames = []
 
-    # Select every nth frame based on frame_skip
-    selected_frames = []
-    for i in range(0, len(all_frames), frame_skip):
-        frame = all_frames[i]
-        timestamp = frame.split('_')[1].replace('.png', '')
-        selected_frames.append({
-            'filename': frame,
-            'timestamp': timestamp,
-            'original_index': i
+    # If start_frame_name is provided, find its index
+    if start_frame_name is not None:
+        try:
+            start_idx = next(i for i, f in enumerate(files) if f == start_frame_name)
+            files = files[start_idx:]  # start from that frame
+        except StopIteration:
+            raise ValueError(f"Start frame {start_frame_name} not found in {config.RGB_PATH}")
+
+    for i, f in enumerate(files[::frame_skip]):
+        if i >= max_frames:
+            break
+
+        timestamp = os.path.splitext(f)[0]
+
+        # Load intrinsics for this frame
+        try:
+            K, image_size = load_camera_intrinsics(config.INTRINSICS_PATH, f)
+        except Exception as e:
+            print(f"Skipping {f}, failed to load intrinsics: {e}")
+            continue
+
+        # Load camera pose
+        camera_poses = load_camera_poses(config.TRAJ_FILE_PATH)
+        camera_pose = camera_poses.get(timestamp)
+        if camera_pose is None:
+            # Try to find the closest timestamp
+            timestamp_float = float(str(timestamp).split("_")[-1])
+            pose_timestamps = [(t, abs(timestamp_float - float(t))) for t in camera_poses.keys()]
+            pose_timestamps.sort(key=lambda x: x[1])
+            if pose_timestamps and pose_timestamps[0][1] < 0.5:  # or whatever your tolerance is
+                closest_timestamp = pose_timestamps[0][0]
+                camera_pose = camera_poses[closest_timestamp]
+            else:
+                print(f"No close camera pose found for {timestamp}, using identity.")
+                camera_pose = np.eye(4)
+
+        frames.append({
+            "frame_name": f,
+            "filename": f,
+            "timestamp": timestamp,
+            "rgb_path": os.path.join(config.RGB_PATH, f),
+            "depth_path": os.path.join(config.DEPTH_PATH, f.replace(".jpg", ".png")),
+            "camera_intrinsics": K,
+            "intrinsics_size": image_size,
+            "camera_pose": camera_pose
         })
 
-    print(f"Selected {len(selected_frames)} frames from {len(all_frames)} total")
-    return selected_frames
+    return frames
+
 
 
 def load_camera_intrinsics(intrinsics_path: str, frame_name: str) -> Tuple[np.ndarray, Tuple[int, int]]:
@@ -73,7 +107,6 @@ def load_camera_poses(traj_file: str) -> Dict[str, np.ndarray]:
 
             pose_dict[timestamp] = pose_matrix
 
-    print(f"Loaded {len(pose_dict)} camera poses")
     return pose_dict
 
 
@@ -90,9 +123,12 @@ def validate_and_align_frame_data(frames_list: List[Dict],
     skipped_count = 0
 
     for frame_data in frames_list:
+
         frame_name = frame_data['filename']
         timestamp = frame_data['timestamp']
 
+        print("frame_name: ", frame_name)
+        
         try:
             # Check if all required files exist
             rgb_file = os.path.join(rgb_path, frame_name)
@@ -109,8 +145,9 @@ def validate_and_align_frame_data(frames_list: List[Dict],
                 skipped_count += 1
                 continue
 
-            # Find matching camera pose
+            # Find matching camera poseso
             camera_pose = camera_poses.get(timestamp)
+            
             if camera_pose is None:
                 timestamp_float = float(timestamp)
                 pose_timestamps = [(t, abs(timestamp_float - float(t))) for t in camera_poses.keys()]
@@ -120,9 +157,11 @@ def validate_and_align_frame_data(frames_list: List[Dict],
                     closest_timestamp = pose_timestamps[0][0]
                     camera_pose = camera_poses[closest_timestamp]
                 else:
+
+                    print(f"Skipped frame {timestamp} because no camera pose within tolerance {timestamp_tolerance}")
                     skipped_count += 1
                     continue
-
+            
             # Load and validate camera intrinsics
             try:
                 camera_intrinsics, image_size = load_camera_intrinsics(intrinsics_path, frame_name)
@@ -153,7 +192,8 @@ def validate_and_align_frame_data(frames_list: List[Dict],
 
             aligned_frames.append(aligned_frame)
 
-        except Exception:
+        except Exception as e:
+            print(f"Skipped, exception {e}")
             skipped_count += 1
             continue
 

@@ -8,7 +8,11 @@ We will use two datasets, **RGB-D dataset** (e.g., ARKit Scenes) for static scen
 
 ---
 ## Instructions on how to run the code
+The project consists of two main Jupyter notebooks:
 
+- full_pipeline_with_3d_vis.ipynb demonstrates the static tracking pipeline and includes the 3D visualization and DepthAnything analysis.
+
+- DynamicTracker.ipynb extends this to dynamic tracking (query based).
 ---
 ## Processing Pipeline
 

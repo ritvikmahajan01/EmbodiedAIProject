@@ -1,15 +1,19 @@
 # Object-Based World Representations with Foundation Models
 
-## Idea Description
+## Description
 
-This project explores **object-based scene representations** for understanding and tracking, inspired by the suggested project *“Explore pure object-based world representations using foundation models”*.  
+This project explores **object-based scene representations** for understanding and tracking. Instead of building dense volumetric (voxel) maps like in **ConceptFusion**, which are complex and memory-heavy, our approach represents the scene purely through **objects** — each described semantically and tracked over time.  
 
-Instead of building dense volumetric (voxel) maps like in **ConceptFusion**, which are complex and memory-heavy, our approach represents the scene purely through **objects** — each described semantically and tracked over time.  
-
-We will use an **RGB-D dataset** (e.g., ARKit Scenes) to simulate realistic indoor environments. As a starting point, we will build upon **Lab 2, Part E** (excluding voxelization).
+We will use two datasets, **RGB-D dataset** (e.g., ARKit Scenes) for static scenes, and **THUD++** for dynamic scenes, to simulate realistic indoor environments. 
 
 ---
+## Instructions on how to run the code
+The project consists of two main Jupyter notebooks:
 
+- full_pipeline_with_3d_vis.ipynb demonstrates static tracking for world representation and includes the 3D visualization and DepthAnything analysis.
+
+- DynamicTracker.ipynb demonstrates static and dynamic tracking query based.
+---
 ## Processing Pipeline
 
 At each timestep (image), we will:
@@ -29,30 +33,17 @@ At each timestep (image), we will:
 
 ---
 
-## Exploration Directions
-
-We will experiment with different object representations:
-- Pure semantic embeddings
-- 3D bounding boxes
-- Center-of-mass points
-
----
-
 ## Extensions
 
 - **Depth Estimation from RGB**  
-  - Use a monocular depth estimation model with RGB images.  
-  - Compare with ground-truth depth data, both qualitatively and quantitatively (using object positions over time).
+  - Use a monocular depth estimation model with RGB images: DepthAnythingv2.  
 
 - **Dynamic Environments**  
   - Handle moving objects.  
   - Associate objects across different times and locations.  
-  - Track object **trajectories**.
 
 - **Open Vocabulary Understanding**  
   - Extend detection and tracking to an **open vocabulary** setting.  
-  - Use text captions from large vision-language models (LVLMs), following approaches like [1].
-
 ---
 
 ## References

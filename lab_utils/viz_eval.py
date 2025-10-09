@@ -45,6 +45,7 @@ def visualize_3d_scene_bbox_results(point_cloud: o3d.geometry.PointCloud = None,
             rr.log("world/environment/tsdf_pointcloud",
                    rr.Points3D(points, colors=colors_uint8, radii=0.008))
         else:
+            
             # Color by height if no RGB data
             z_values = points[:, 2]
             z_normalized = (z_values - z_values.min()) / (z_values.max() - z_values.min())

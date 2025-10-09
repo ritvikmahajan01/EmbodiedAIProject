@@ -126,8 +126,6 @@ def validate_and_align_frame_data(frames_list: List[Dict],
 
         frame_name = frame_data['filename']
         timestamp = frame_data['timestamp']
-
-        print("frame_name: ", frame_name)
         
         try:
             # Check if all required files exist

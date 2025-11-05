@@ -46,6 +46,3 @@ At each timestep (image), we will:
   - Extend detection and tracking to an **open vocabulary** setting.  
 ---
 
-## References
-
-[1] Example work using LVLMs for text-based open-vocabulary object detection.
